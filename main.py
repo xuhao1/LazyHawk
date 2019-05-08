@@ -28,7 +28,7 @@ def work_dqn():
     plt.show()
 
 def work_trpo(params):
-    state_dim = 8
+    state_dim = 11
     action_dim = 2
     policy_net = Policy(state_dim, action_dim, log_std=-1)
     value_net = Value(state_dim)

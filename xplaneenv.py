@@ -73,6 +73,7 @@ class XPlaneEnvCon():
     def state(self):
         state =  [self.plant.airspeed, self.plant.ver_vel_ind,
                   self.plant.euler[2], self.plant.euler[1],
+                  self.plant.angular_rate[0], self.plant.angular_rate[1], self.plant.angular_rate[2],
                   self.plant.ax_body, self.plant.ay_body, self.plant.az_body, self.plant.data["yoke_pitch"]]
         return state
 
