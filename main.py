@@ -31,7 +31,10 @@ def work_trpo(params):
     state_dim = 11
     action_dim = 2
     policy_net = Policy(state_dim, action_dim, log_std=-1)
+
     value_net = Value(state_dim)
+
+    # policy_net, value_net, running_state = pickle.load(open('learned_models/glider_trpo.p', "rb"))
 
     device = torch.device('cuda', index=0) if torch.cuda.is_available() else torch.device('cpu')
 
@@ -86,14 +89,16 @@ def work_trpo(params):
             plt.plot(aver_vel_ind, label='Average Indicate Climb Rate')
             plt.grid(which = "both")
             plt.legend()
-            plt.savefig(f"TRPO_TE_average_climb_{time.strftime('%Y-%m-%d_%H_%M', time.localtime()) }.pdf")
+            # plt.savefig(f"TRPO_TE_average_climb_{time.strftime('%Y-%m-%d_%H_%M', time.localtime()) }.pdf")
+            plt.savefig(f"TRPO_TE_average_climb.pdf")
 
             plt.figure("Altitude Changes")
             plt.clf()
             plt.plot(heightd, label="Altitude Changes")
             plt.grid(which = "both")
             plt.legend()
-            plt.savefig(f"TRPO_TE_dalt_{time.strftime('%Y-%m-%d_%H_%M', time.localtime()) }.pdf")
+            # plt.savefig(f"TRPO_TE_dalt_{time.strftime('%Y-%m-%d_%H_%M', time.localtime()) }.pdf")
+            plt.savefig(f"TRPO_TE_dalt.pdf")
 
 
             plt.figure("Total Energy Changes")
@@ -101,7 +106,8 @@ def work_trpo(params):
             plt.plot(ted, label="Total Energy Changes")
             plt.grid(which = "both")
             plt.legend()
-            plt.savefig(f"TRPO_TE_{time.strftime('%Y-%m-%d_%H_%M', time.localtime()) }.pdf")
+            # plt.savefig(f"TRPO_TE_{time.strftime('%Y-%m-%d_%H_%M', time.localtime()) }.pdf")
+            plt.savefig(f"TRPO_TE.pdf")
 
             # plt.pause(0.1)
 
