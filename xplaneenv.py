@@ -17,6 +17,7 @@ class XPlaneEnv():
         plant.control_callback = lambda plant, dt: self.att_controller.control(plant, dt)
         self.plant = plant
         self.reset()
+        self.total_eneygy_last = None
 
     def state(self):
         state =  [self.plant.airspeed, self.plant.ver_vel_ind,
@@ -101,8 +102,28 @@ class XPlaneEnvCon():
             self.ls_time = tnow
         return self.state(), self.reward(), self.done(), 0
 
+    def total_energy(self):
+        return self.plant.alt * 9.8 + 0.5*self.plant.airspeed
+
+    def reward_te(self):
+        if self.total_energy_last is None:
+            self.total_energy_last = self.total_energy()
+            self.total_energy_last_time = time.time()
+            return 0
+        else:
+            te = self.total_energy()
+            te_last = self.total_energy_last
+            t_last = self.total_energy_last_time
+            self.total_energy_last = te
+            self.total_energy_last_time = time.time()
+            dt  = self.total_energy_last_time - t_last
+
+            self.total_energy_last_time = t_last
+            return (te - te_last) / dt
+
     def reward(self):
         # print(self.plant.ver_vel_ind)
+        # return self.plant.ver_vel_ind
         return self.plant.ver_vel_ind
 
     def reset(self):

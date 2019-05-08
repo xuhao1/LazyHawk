@@ -20,6 +20,7 @@ def collect_samples(pid, queue, env, policy, custom_reward,
     num_episodes = 0
     # print("Collecting")
     t_hloss = 0
+    te_ = 0
     state = env.reset()
 
     while num_steps < min_batch_size:
@@ -28,7 +29,8 @@ def collect_samples(pid, queue, env, policy, custom_reward,
             state = running_state(state)
         reward_episode = 0
         h0 = env.altitude()
-        print("H0", h0)
+        TE0 = env.total_energy()
+        print(f"H0 {h0:3.1f} TE0 {TE0}")
 
         for t in range(256):
             state_var = tensor(state).unsqueeze(0)
@@ -68,9 +70,12 @@ def collect_samples(pid, queue, env, policy, custom_reward,
         min_reward = min(min_reward, reward_episode)
         max_reward = max(max_reward, reward_episode)
         h1 = env.altitude()
-        print("H1", h1)
+        TE1 = env.total_energy()
+
+        print(f"H0 {h1:3.1f} TE1 {TE1}")
 
         t_hloss += h1 - h0
+        te_ += TE1 - TE0
 
         print("Tloss", h1 - h0)
 
@@ -81,6 +86,7 @@ def collect_samples(pid, queue, env, policy, custom_reward,
     log['max_reward'] = max_reward
     log['min_reward'] = min_reward
     log["delta_height"] = t_hloss/num_episodes
+    log["delta_te"] = te_/num_episodes
     if custom_reward is not None:
         log['total_c_reward'] = total_c_reward
         log['avg_c_reward'] = total_c_reward / num_steps

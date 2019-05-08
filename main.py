@@ -48,10 +48,7 @@ def work_trpo(params):
     plt.figure('Average Indicate Climb Rate')
     aver_vel_ind = []
     heightd = []
-    plt.plot(aver_vel_ind)
-    plt.figure("Altitude Changes")
-    plt.plot(heightd)
-    # plt.pause(0.1)
+    ted = []
 
     def update_params(batch):
         states = torch.from_numpy(np.stack(batch.state)).to(dtype).to(device)
@@ -78,10 +75,11 @@ def work_trpo(params):
         t1 = time.time()
 
         if i_iter % params['log_interval'] == 0:
-            print('{}\tT_sample {:.4f}\tT_update {:.4f}\tR_min {:.2f}\tR_max {:.2f}\tR_avg {:.2f}\tD_H {:.1f}'.format(
-                i_iter, log['sample_time'], t1-t0, log['min_reward'], log['max_reward'], log['avg_reward'], log['delta_height']))
+            print('{}\tT_sample {:.4f}\tT_update {:.4f}\tR_min {:.2f}\tR_max {:.2f}\tR_avg {:.2f}\tD_H {:.1f} D_TE {:.1f}'.format(
+                i_iter, log['sample_time'], t1-t0, log['min_reward'], log['max_reward'], log['avg_reward'], log['delta_height'], log['delta_te']))
             aver_vel_ind.append(log['avg_reward']/1000)
             heightd.append(log['delta_height'])
+            ted.append(log['delta_te'])
 
             plt.figure('Average Indicate Climb Rate')
             plt.clf()
@@ -89,14 +87,22 @@ def work_trpo(params):
             plt.plot(aver_vel_ind, label='Average Indicate Climb Rate')
             plt.grid(which = "both")
             plt.legend()
-            plt.savefig(f"TRPO_average_climb_{time.strftime('%Y-%m-%d_%H_%M', time.localtime()) }.pdf")
+            plt.savefig(f"TRPO_TE_average_climb_{time.strftime('%Y-%m-%d_%H_%M', time.localtime()) }.pdf")
 
             plt.figure("Altitude Changes")
             plt.clf()
             plt.plot(heightd, label="Altitude Changes")
             plt.grid(which = "both")
             plt.legend()
-            plt.savefig(f"TRPO_dalt_{time.strftime('%Y-%m-%d_%H_%M', time.localtime()) }.pdf")
+            plt.savefig(f"TRPO_TE_dalt_{time.strftime('%Y-%m-%d_%H_%M', time.localtime()) }.pdf")
+
+
+            plt.figure("Total Energy Changes")
+            plt.clf()
+            plt.plot(heightd, label="Total Energy Changes")
+            plt.grid(which = "both")
+            plt.legend()
+            plt.savefig(f"TRPO_TE_{time.strftime('%Y-%m-%d_%H_%M', time.localtime()) }.pdf")
 
             # plt.pause(0.1)
 
