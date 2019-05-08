@@ -34,7 +34,7 @@ def work_trpo(params):
 
     value_net = Value(state_dim)
 
-    # policy_net, value_net, running_state = pickle.load(open('learned_models/glider_trpo.p', "rb"))
+    policy_net, value_net, running_state = pickle.load(open('learned_models/glider_trpo.p', "rb"))
 
     device = torch.device('cuda', index=0) if torch.cuda.is_available() else torch.device('cpu')
 

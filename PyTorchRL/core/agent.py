@@ -32,7 +32,7 @@ def collect_samples(pid, queue, env, policy, custom_reward,
         TE0 = env.total_energy()
         print(f"H0 {h0:3.1f} TE0 {TE0}")
 
-        for t in range(128):
+        for t in range(1024):
             state_var = tensor(state).unsqueeze(0)
             with torch.no_grad():
                 if mean_action:
