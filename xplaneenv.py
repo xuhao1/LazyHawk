@@ -43,6 +43,7 @@ class XPlaneEnv():
 
     def reset(self):
         mouse.click(Button.left, 2)
+        print("Reseting...")
         self.plant.load_situation()
         self.att_controller.reset()
         time.sleep(1)
@@ -67,7 +68,7 @@ class XPlaneEnvCon():
         plant.control_callback = lambda plant, dt: self.att_controller.control(plant, dt)
         self.plant = plant
         self.ls_time = None
-        self.reset()
+        # self.reset()
 
     def state(self):
         state =  [self.plant.airspeed, self.plant.ver_vel_ind,
@@ -83,6 +84,10 @@ class XPlaneEnvCon():
         # print(action)
         roll_sp = np.clip(action[0], -1, 1) * 45 / 57.3
         pitch_sp = np.clip(action[1], -1, 1) * 30 / 57.3
+
+        #Donothing Test
+        # roll_sp = 0
+        # pitch_sp = 0
         # print(f"DQN ROLLSP {roll_sp*57.3:3.1f} PITCHSP {pitch_sp*57.3:3.1f}")
 
 
@@ -103,7 +108,8 @@ class XPlaneEnvCon():
         return self.state(), self.reward(), self.done(), 0
 
     def total_energy(self):
-        return self.plant.alt * 9.8 + 0.5*self.plant.airspeed
+        print(f"AIRSPD {self.plant.airspeed}")
+        return self.plant.alt * 9.8 + 0.5*self.plant.airspeed*self.plant.airspeed
 
     def reward_te(self):
         if self.total_energy_last is None:
@@ -132,8 +138,9 @@ class XPlaneEnvCon():
         # self.plant.pause()
         self.plant.set_ctrl(0, 0, 0)
 
+        print("Reseting....")
         self.plant.load_situation()
-
+        time.sleep(2)
         self.plant.set_ctrl(0, 0, 0)
 
         # self.plant.pause()

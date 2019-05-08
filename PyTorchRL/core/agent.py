@@ -32,7 +32,7 @@ def collect_samples(pid, queue, env, policy, custom_reward,
         TE0 = env.total_energy()
         print(f"H0 {h0:3.1f} TE0 {TE0}")
 
-        for t in range(256):
+        for t in range(128):
             state_var = tensor(state).unsqueeze(0)
             with torch.no_grad():
                 if mean_action:
@@ -72,12 +72,12 @@ def collect_samples(pid, queue, env, policy, custom_reward,
         h1 = env.altitude()
         TE1 = env.total_energy()
 
-        print(f"H0 {h1:3.1f} TE1 {TE1}")
+        print(f"H1 {h1:3.1f} TE1 {TE1}")
 
         t_hloss += h1 - h0
         te_ += TE1 - TE0
 
-        print("Tloss", h1 - h0)
+        print(f"DAlt {h1-h0} DTE {TE1-TE0}")
 
     log['num_steps'] = num_steps
     log['num_episodes'] = num_episodes

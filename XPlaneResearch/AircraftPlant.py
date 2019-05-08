@@ -165,6 +165,7 @@ class AircraftPlant():
 
     def load_situation(self):
         # self.xp.load_situation()
+        keyboard.press_and_release("ctrl+shift+f11")
         keyboard.press_and_release("ctrl+shift+f12")
 
     def reset_flight(self):

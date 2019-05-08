@@ -39,7 +39,6 @@ def work_trpo(params):
     value_net.to(device)
 
     xplaneenv = XPlaneEnvCon()
-    xplaneenv.update()
     running_state = ZFilter((state_dim,), clip=5)
 
     agent = Agent(xplaneenv, policy_net, device, running_state=running_state, render=False,
@@ -99,7 +98,7 @@ def work_trpo(params):
 
             plt.figure("Total Energy Changes")
             plt.clf()
-            plt.plot(heightd, label="Total Energy Changes")
+            plt.plot(ted, label="Total Energy Changes")
             plt.grid(which = "both")
             plt.legend()
             plt.savefig(f"TRPO_TE_{time.strftime('%Y-%m-%d_%H_%M', time.localtime()) }.pdf")
