@@ -71,7 +71,7 @@ import random
 # DQN Algoritms for 4 input and  2 output
 class DQNwithState:
 
-    def __init__(self, state_dim, action_dim, env, batch_size=128, gamma=0.1, epsilon=0.3, lr=0.001, target_update=10):
+    def __init__(self, state_dim, action_dim, env, batch_size=128, gamma=0.9, epsilon=0.3, lr=0.001, target_update=10):
         self.PolicyQNet = DQNetState(state_dim, action_dim)
         self.TargetQNet = DQNetState(state_dim, action_dim)
 

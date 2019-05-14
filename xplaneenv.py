@@ -4,6 +4,7 @@ from XPlaneUDP.XPlaneUdp import XPlaneUdp
 from pynput.mouse import Button, Controller
 mouse = Controller()
 import numpy as np
+import random
 
 class XPlaneEnv():
     def __init__(self):
@@ -57,7 +58,7 @@ class XPlaneEnv():
         return False
 
 class XPlaneEnvCon():
-    def __init__(self):
+    def __init__(self, baseline=False):
         print("Staring LazyHawk on simulator")
         plant = AircraftPlant()
         print("Will reload situation")
@@ -68,6 +69,10 @@ class XPlaneEnvCon():
         plant.control_callback = lambda plant, dt: self.att_controller.control(plant, dt)
         self.plant = plant
         self.ls_time = None
+        self.baseline = baseline
+        self.total_energy_last = 0
+        self.total_energy_last_time = time.time()
+
         # self.reset()
 
     def state(self):
@@ -87,8 +92,9 @@ class XPlaneEnvCon():
         pitch_sp = np.clip(action[1], -1, 1) * 30 / 57.3
 
         #Donothing Test
-        # roll_sp = 0
-        # pitch_sp = 0
+        if self.baseline:
+            roll_sp = 0
+            pitch_sp = 0
         # print(f"DQN ROLLSP {roll_sp*57.3:3.1f} PITCHSP {pitch_sp*57.3:3.1f}")
 
 
@@ -109,7 +115,7 @@ class XPlaneEnvCon():
         return self.state(), self.reward(), self.done(), 0
 
     def total_energy(self):
-        print(f"AIRSPD {self.plant.airspeed}")
+        # print(f"AIRSPD {self.plant.airspeed}")
         return self.plant.alt * 9.8 + 0.5*self.plant.airspeed*self.plant.airspeed
 
     def reward_te(self):
@@ -126,22 +132,27 @@ class XPlaneEnvCon():
             dt  = self.total_energy_last_time - t_last
 
             self.total_energy_last_time = t_last
-            return (te - te_last) / dt
+            return (te - te_last) * 16 / dt 
 
     def reward(self):
         # print(self.plant.ver_vel_ind)
         # return self.plant.ver_vel_ind
-        return self.plant.ver_vel_ind
+        # return self.plant.ver_vel_ind
+        return self.reward_te()
 
     def reset(self):
+        
         mouse.click(Button.left, 2)
 
         # self.plant.pause()
         self.plant.set_ctrl(0, 0, 0)
 
         print("Reseting....")
-        self.plant.load_situation()
+        self.plant.load_situation(random.randint(10, 12))
         time.sleep(2)
+        
+        mouse.click(Button.left, 2)
+
         self.plant.set_ctrl(0, 0, 0)
 
         # self.plant.pause()
@@ -153,8 +164,12 @@ class XPlaneEnvCon():
 
     def altitude(self):
         return self.plant.alt
+    
+    def running_time(self):
+        return self.plant.data["running_time"]
 
-
+    def position(self):
+        return [ self.plant.data["local_x"], self.plant.data["local_y"], self.plant.data["local_z"] ]
 
     def done(self):
-        return False
+        return self.altitude() < 5 or self.plant.airspeed < 5

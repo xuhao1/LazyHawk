@@ -53,6 +53,10 @@ class AircraftPlant():
         self.AddDataRef("sim/flightmodel/position/local_ay", "local_ay")
         self.AddDataRef("sim/flightmodel/position/local_az", "local_az")
 
+        self.AddDataRef("sim/flightmodel/position/local_x", "local_y")
+        self.AddDataRef("sim/flightmodel/position/local_y", "local_z")
+        self.AddDataRef("sim/flightmodel/position/local_z", "local_x")
+
         self.AddDataRef("sim/flightmodel/position/local_vx", "local_vx")
         self.AddDataRef("sim/flightmodel/position/local_vy", "local_vy")
         self.AddDataRef("sim/flightmodel/position/local_vz", "local_vz")
@@ -163,10 +167,10 @@ class AircraftPlant():
     def pause(self):
         keyboard.press_and_release("p")
 
-    def load_situation(self):
+    def load_situation(self, r):
         # self.xp.load_situation()
-        # keyboard.press_and_release("ctrl+shift+f11")
-        keyboard.press_and_release("ctrl+shift+f12")
+        print(f"load f{r}")
+        keyboard.press_and_release(f"ctrl+shift+f{r}")
 
     def reset_flight(self):
         self.xp.reset_flight()

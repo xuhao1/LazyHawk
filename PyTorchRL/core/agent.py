@@ -6,7 +6,7 @@ import time
 
 
 def collect_samples(pid, queue, env, policy, custom_reward,
-                    mean_action, render, running_state, min_batch_size):
+                    mean_action, render, running_state, min_batch_size, period=1024):
     torch.randn(pid)
     log = dict()
     memory = Memory()
@@ -21,18 +21,20 @@ def collect_samples(pid, queue, env, policy, custom_reward,
     # print("Collecting")
     t_hloss = 0
     te_ = 0
+    t_stay = 0
+    DAirspeed = 0
     state = env.reset()
 
-    while num_steps < min_batch_size:
-        state = env.reset()
-        if running_state is not None:
-            state = running_state(state)
-        reward_episode = 0
-        h0 = env.altitude()
-        TE0 = env.total_energy()
-        print(f"H0 {h0:3.1f} TE0 {TE0}")
-
-        for t in range(1024):
+    trajx = []
+    trajy = []
+    trajz = []
+    
+    #Trial step
+    print("Trial Step")
+    if running_state is not None:
+        state = running_state(state)
+    for t in range(period):
+        # for t in range(10000):
             state_var = tensor(state).unsqueeze(0)
             with torch.no_grad():
                 if mean_action:
@@ -41,6 +43,38 @@ def collect_samples(pid, queue, env, policy, custom_reward,
                     action = policy.select_action(state_var)[0].numpy()
             action = int(action) if policy.is_disc_action else action.astype(np.float64)
             next_state, reward, done, _ = env.step(action)
+        
+    while num_steps < min_batch_size:
+        trajx = []
+        trajy = []
+        trajz = []
+        state = env.reset()
+        
+        if running_state is not None:
+            state = running_state(state)
+        reward_episode = 0
+
+        h0 = env.altitude()
+        TE0 = env.total_energy()
+        t0 = env.running_time()
+        v0 = env.plant.airspeed
+        print(f"H0 {h0:3.1f}  V0 {v0:3.1f} TE0 {TE0:3.1f}")
+
+        for t in range(period):
+        # for t in range(10000):
+            state_var = tensor(state).unsqueeze(0)
+            with torch.no_grad():
+                if mean_action:
+                    action = policy(state_var)[0][0].numpy()
+                else:
+                    action = policy.select_action(state_var)[0].numpy()
+            action = int(action) if policy.is_disc_action else action.astype(np.float64)
+            next_state, reward, done, _ = env.step(action)
+
+            pos = env.position()
+            trajx.append(pos[0])
+            trajy.append(pos[1])
+            trajz.append(pos[2])
             reward_episode += reward
             if running_state is not None:
                 next_state = running_state(next_state)
@@ -58,11 +92,19 @@ def collect_samples(pid, queue, env, policy, custom_reward,
             if render:
                 env.render()
             if done:
+                t1 = env.running_time()
+                # t_stay = t1 - t0
+                print(f"Crash with time of {(t1-t0)*16:4.1f}")
                 break
 
             state = next_state
+        
+        t1 = env.running_time()
+        t_stay += t1 - t0
+        
+        v1 = env.plant.airspeed
 
-
+        
         # log stats
         num_steps += (t + 1)
         num_episodes += 1
@@ -72,12 +114,11 @@ def collect_samples(pid, queue, env, policy, custom_reward,
         h1 = env.altitude()
         TE1 = env.total_energy()
 
-        print(f"H1 {h1:3.1f} TE1 {TE1}")
-
         t_hloss += h1 - h0
         te_ += TE1 - TE0
+        DAirspeed += v1 - v0
 
-        print(f"DAlt {h1-h0} DTE {TE1-TE0}")
+        print(f"TSTAY {(t1-t0)*16:4.1f} DAlt {h1-h0:4.1f} DTE {TE1-TE0:4.1f} DV {v1-v0:4.1f};; H1 {h1:3.1f} TE1 {TE1:4.1f} V1 {v1:4.1f};; Size {len(trajx)}")
 
     log['num_steps'] = num_steps
     log['num_episodes'] = num_episodes
@@ -87,6 +128,12 @@ def collect_samples(pid, queue, env, policy, custom_reward,
     log['min_reward'] = min_reward
     log["delta_height"] = t_hloss/num_episodes
     log["delta_te"] = te_/num_episodes
+    log["trajx"] = trajx
+    log["trajy"] = trajy
+    log["trajz"] = trajz
+    log["tstay"] = t_stay*16 / num_episodes
+    log["dairspeed"] = DAirspeed / num_episodes
+
     if custom_reward is not None:
         log['total_c_reward'] = total_c_reward
         log['avg_c_reward'] = total_c_reward / num_steps
@@ -129,7 +176,7 @@ class Agent:
         self.render = render
         self.num_threads = num_threads
 
-    def collect_samples(self, min_batch_size):
+    def collect_samples(self, min_batch_size, period=1024):
         t_start = time.time()
         to_device(torch.device('cpu'), self.policy)
         thread_batch_size = int(math.floor(min_batch_size / self.num_threads))
@@ -144,7 +191,7 @@ class Agent:
             worker.start()
 
         memory, log = collect_samples(0, None, self.env, self.policy, self.custom_reward, self.mean_action,
-                                      self.render, self.running_state, thread_batch_size)
+                                      self.render, self.running_state, thread_batch_size, period=period)
 
         worker_logs = [None] * len(workers)
         worker_memories = [None] * len(workers)
